@@ -1,0 +1,126 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "LigaMagicAPI",
+    "description": "Uma API criada em Javascript (Node, Express) para obter os preços de cartas de Magic: The Gathering no Brasil, além de outras funcionalidades.",
+    "version": "1.0.0"
+  },
+  "host": "localhost:3000",
+  "basePath": "/",
+  "tags": [
+    {
+      "name": "LigaMagic",
+      "description": "Endpoints relacionados a preços brasileiros."
+    }
+  ],
+  "schemes": [
+    "http"
+  ],
+  "paths": {
+    "/mtg/{cardName}": {
+      "get": {
+        "tags": [
+          "LigaMagic"
+        ],
+        "summary": "Obtém os menores preços da carta",
+        "description": "O nome da carta pode ser inserito tanto em Português quanto em Inglês.",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "cardName",
+            "in": "path",
+            "description": "Nome da carta a ser buscada",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Card encontrado",
+            "schema": {
+              "$ref": "#/definitions/Preco"
+            }
+          },
+          "404": {
+            "description": "Card não econtrado"
+          }
+        }
+      }
+    },
+    "/mtg/{storeName}/{cardName}": {
+      "get": {
+        "tags": [
+          "LigaMagic"
+        ],
+        "description": "Retorna null caso o card não esteja em estoque.",
+        "parameters": [
+          {
+            "name": "storeName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "cardName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pesquisa bem-sucedida",
+            "schema": {
+              "$ref": "#/definitions/PrecoLoja"
+            }
+          },
+          "404": {
+            "description": "Card não encontrado"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Preco": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "menor": {
+          "type": "number"
+        },
+        "prices": {
+          "type": "object",
+          "properties": {
+            "setname": {
+              "type": "object",
+              "properties": {
+                "Normal": {
+                  "type": "number"
+                },
+                "Foil": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "PrecoLoja": {
+      "type": "object",
+      "properties": {
+        "menor_preco": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}
