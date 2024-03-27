@@ -11,7 +11,14 @@ class Store {
             return data.id;
         });
         var url = this.url + (await id);
-        return await fetch(url)
+        
+        let headers = new Headers({
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0"
+        })
+
+        return await fetch(url, {mehotd: 'GET', headers:headers})
             .then(function (response) {
                 switch (response.status) {
                     case 200:

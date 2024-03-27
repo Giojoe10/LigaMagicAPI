@@ -7,6 +7,7 @@ async function getCard(req, res, next) {
         const card = await Card.fromName(req.params.cardName);
         await card.data
         card.data.then(async function (response) {
+            console.log(await card.data)
             res.json({
                 name: card.name,
                 id: response.id,

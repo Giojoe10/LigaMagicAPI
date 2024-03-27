@@ -37,7 +37,14 @@ class Card {
         const url = `https://api.scryfall.com/cards/named?fuzzy=${await Card.parse(
             cardName
         )}`;
-        var scryfallName = fetch(url)
+        
+        let headers = new Headers({
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0"
+        })
+
+        var scryfallName = fetch(url, {mehotd: 'GET', headers:headers})
             .then(function (response) {
                 return response.json();
             })
@@ -60,7 +67,14 @@ class Card {
         const url = `https://www.ligamagic.com.br/?view=cards/card&card=${await Card.parse(
             await this.name
         )}`;
-        return fetch(url)
+        
+        let headers = new Headers({
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0"
+        })
+
+        return fetch(url, {mehotd: 'GET', headers:headers})
             .then(function (response) {
                 switch (response.status) {
                     case 200:
