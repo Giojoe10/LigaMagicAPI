@@ -1,25 +1,18 @@
 {
-    "name": "ligamagicapi",
+    "name": "azure_ligamagicapi",
     "version": "1.0.0",
-    "description": "Uma API criada em Javascript (Node, Express) para obter os preços de cartas de Magic: The Gathering no Brasil, além de outras funcionalidades.",
-    "main": "server.js",
+    "description": "",
+    "main": "index.js",
     "scripts": {
-        "start": "node server",
-        "dev": "nodemon server.js",
-        "swagger": "node ./swagger.js"
+      "start": "node server.js"
     },
     "keywords": [],
     "author": "",
     "license": "ISC",
     "dependencies": {
-        "cors": "^2.8.5",
-        "express": "^4.18.2",
-        "html-entities": "^2.4.0",
-        "node-html-parser": "^6.1.12",
-        "swagger-ui-express": "^5.0.0"
-    },
-    "devDependencies": {
-        "nodemon": "^3.0.1",
-        "swagger-autogen": "^2.23.7"
+      "axios": "^1.7.7",
+      "express": "^4.19.2",
+      "html-entities": "^2.5.2"
     }
-}
+  }
+  

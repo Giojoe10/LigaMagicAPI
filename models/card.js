@@ -1,6 +1,7 @@
-const fs = require("fs");
+const CardNaoEncontrado = require("./customExceptions");
+const axios = require("axios");
 const htmlEntities = require("html-entities");
-const CardNaoEncontrado = require('./customExceptions')
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const EXTRA_KEYS = {
     2: "Foil",
@@ -18,119 +19,89 @@ const EXTRA_KEYS = {
     41: "Miscut",
 };
 
+const HEADERS = {
+    "Accept": "application/json",
+    "Content-Type": "application/json",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+};
+
 class Card {
     constructor(cardName) {
         this.name = cardName;
         this.data = this.getPrices();
     }
 
-    static async fromName(cardName){
-        let name = Card.getScryfallName(cardName)
-        if (await name==undefined){
-            return null
+    static async fromName(cardName) {
+        let name = await Card.getScryfallName(cardName);
+        if(name==undefined){
+            return null;
         }else{
-            return new Card(await name)
+            return new Card(name);
         }
     }
 
     static async getScryfallName(cardName) {
-        const url = `https://api.scryfall.com/cards/named?fuzzy=${await Card.parse(
-            cardName
-        )}`;
-        
-        let headers = new Headers({
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0"
+        const parsedName = await Card.parseName(cardName);
+        const url = `https://api.scryfall.com/cards/named?fuzzy=${parsedName}`;
+
+        await sleep(1000);
+        const response = await axios.get(url, {
+            headers: HEADERS
         })
-
-        var scryfallName = fetch(url, {mehotd: 'GET', headers:headers})
-            .then(function (response) {
-                return response.json();
-            })
-            .then(function (scryfallData) {
-                return scryfallData.name;
-            });
-
-        if (await scryfallName==undefined){
-            throw new CardNaoEncontrado(`O card "${cardName} não foi encontrado!"`)
+        const scryfallName = response.data.name;
+        if(scryfallName == undefined){
+            throw new CardNaoEncontrado(`The card ${cardName} was not found on Scryfall.`);
         }
-    
-        return await scryfallName;
+
+        return scryfallName;
     }
 
-    static async parse(name) {
-        return await name.replace(" ", "+").split("/")[0].trim();
+    static parseName(cardName) {
+        return cardName.replace(" ", "+").split("/")[0].trim();
     }
 
     async getPrices() {
-        const url = `https://www.ligamagic.com.br/?view=cards/card&card=${await Card.parse(
-            await this.name
-        )}`;
-        
-        let headers = new Headers({
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0"
+        const url = `https://www.ligamagic.com.br/?view=cards/card&card=${Card.parseName(this.name)}`;
+
+        await sleep(1000);
+        console.log("Getting prices for " + this.name);
+        const response = await axios.get(url, {
+            headers: HEADERS,
         })
 
-        return fetch(url, {mehotd: 'GET', headers:headers})
-            .then(function (response) {
-                switch (response.status) {
-                    case 200:
-                        return response.text();
-                    case 404:
-                        throw response;
-                    default:
-                        throw response;
+        const page = response.data;
+        const rawPrices = page.match(/var g_avgprice='(.+)'/);
+        const id = page.match(/onclick="AlertaPreco.showPopup\(([0-9]+)\);"/)[1];
+        const unfilteredPrices = JSON.parse(rawPrices[1]);
+        const rawSets = [...page.matchAll(/<option value='([0-9]{2,})'>([^<]+)/gm)];
+        var sets = {};
+        rawSets.forEach(rawSet => {
+            sets[rawSet[1]] = htmlEntities.decode(rawSet[2]);;
+        });
+
+        var prices = {};
+        var cheapest = Infinity;
+        for (const [key, value] of Object.entries(unfilteredPrices)) {
+            if(value.precoMenor!=0){
+                prices[sets[key]] = {Normal: value.precoMenor};
+                if (value.precoMenor < cheapest) {
+                    cheapest = value.precoMenor;
                 }
-            })
-            .then(function (html) {
-                fs.writeFileSync("./page.html", html);
-                var rawPrices = html.match(/var g_avgprice='(.+)'/);
-                var id = html.match(
-                    /onclick="AlertaPreco.showPopup\(([0-9]+)\);"/
-                )[1];
-
-                var unfilteredPrices = JSON.parse(rawPrices[1]);
-                var rawSets = [
-                    ...html.matchAll(/<option value='([0-9]{2,})'>([^<]+)/gm),
-                ];
-                var sets = {};
-                rawSets.forEach((element) => {
-                    sets[element[1]] = htmlEntities.decode(element[2]);
-                });
-                var prices = {};
-                var menor = Infinity;
-                for (const [key, value] of Object.entries(unfilteredPrices)) {
-                    if (value.precoMenor != 0) {
-                        prices[sets[key]] = { Normal: value.precoMenor };
-                        if (value.precoMenor < menor) {
-                            menor = value.precoMenor;
-                        }
+            }
+            if ("extras" in value){
+                for (const [extraKey, extraValue] of Object.entries(value.extras)) {
+                    if (!(sets[key] in prices)) {
+                        prices[sets[key]] = {};
                     }
-                    if ("extras" in value) {
-                        for (const [extra_key, extra_value] of Object.entries(
-                            value.extras
-                        )) {
-                            if (!(sets[key] in prices)) {
-                                prices[sets[key]] = {};
-                            }
-
-                            prices[sets[key]][EXTRA_KEYS[extra_key]] =
-                                extra_value.precoMenor;
-                            if (extra_value.precoMenor < menor) {
-                                menor = extra_value.precoMenor;
-                            }
-                        }
+                    prices[sets[key]][EXTRA_KEYS[extraKey]] = extraValue.precoMenor;
+                    if (extraValue.precoMenor < cheapest) {
+                        cheapest = extraValue.precoMenor;
                     }
                 }
-                return { id, menor, prices };
-            })
-            .catch(function (e) {
-                console.log(e);
-            });
+            }
+        }
+        return {id, prices, cheapest}
     }
 }
 
-module.exports = Card;
+module.exports = Card;  
