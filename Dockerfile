@@ -1,5 +1,5 @@
 FROM node:20.17-alpine3.19 AS build
-RUN apt-get update && apt-get install -y xvfb
+RUN apk add --no-cache xvfb
 WORKDIR /app
 COPY package.json ./
 COPY package-lock.json ./
