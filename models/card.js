@@ -48,6 +48,7 @@ class Card {
         const response = await axios.get(url, {
             headers: HEADERS
         })
+
         const scryfallName = response.data.name;
         if(scryfallName == undefined){
             throw new CardNaoEncontrado(`The card ${cardName} was not found on Scryfall.`);
@@ -65,11 +66,13 @@ class Card {
 
         await sleep(1000);
         console.log("Getting prices for " + this.name);
-        const response = await axios.get(url, {
+
+        const cloudflareScraper = await import('cloudflare-scraper');
+        const response = await cloudflareScraper.default.get(url, {
             headers: HEADERS,
         })
 
-        const page = response.data;
+        const page = response.body;
         const rawPrices = page.match(/var g_avgprice='(.+)'/);
         const id = page.match(/onclick="AlertaPreco.showPopup\(([0-9]+)\);"/)[1];
         const unfilteredPrices = JSON.parse(rawPrices[1]);

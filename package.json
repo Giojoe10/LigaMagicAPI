@@ -4,15 +4,15 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-      "start": "node server.js"
+        "start": "node server.js"
     },
     "keywords": [],
     "author": "",
     "license": "ISC",
     "dependencies": {
-      "axios": "^1.7.7",
-      "express": "^4.19.2",
-      "html-entities": "^2.5.2"
+        "axios": "^1.7.7",
+        "cloudflare-scraper": "^2.0.0",
+        "express": "^4.19.2",
+        "html-entities": "^2.5.2"
     }
-  }
-  
+}
