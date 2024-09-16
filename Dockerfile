@@ -1,4 +1,4 @@
-FROM node:20.17 AS build
+FROM node:20.17-alpine3.19 AS build
 RUN apt-get update && apt-get install -y xvfb
 WORKDIR /app
 COPY package.json ./
